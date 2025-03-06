@@ -1,0 +1,81 @@
+﻿<Window x:Class="graphiclaEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:graphiclaEditor"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="900">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.3*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="0.7*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Vertical">
+            <Button  Name="btnClear" Content="Clear" Click="ClearDrawArea" Margin="5,10"  />
+            
+            <Button Name="btnLine" Content="Line" Margin="5,10" Click="ChooseShape"/>
+            <StackPanel Margin="5,10" Orientation="Horizontal">
+                
+                
+                <Button Name="btnRightPolygon" Width="100" Content="Right Polygon"  Click="ChooseShape"/>
+                <TextBox Name="tbVertCount" Width="50" Text="3" Margin="50,0,0,0">
+                    
+                </TextBox>
+            </StackPanel>
+            
+            <Button Name="btnElipse" Content="Elipse" Margin="5,10" Click="ChooseShape"/>
+            <Button Name="btnRectangle" Content="Rectangle" Margin="5,10" Click="ChooseShape"/>
+            <Button Name="btnPolyline" Content="Polyline" Margin="5,10" Click="ChooseShape"/>
+            <Button Name="btnPolygon" Content="Polygon" Margin="5,10" Click="ChooseShape"/>
+
+            <StackPanel Margin="10" Orientation="Horizontal">
+                <Label Content="Fill color     "></Label>
+                <ComboBox x:Name="cbFillColor" 
+              SelectedIndex="0" Width="100">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Rectangle Width="50" 
+                       Height="20" 
+                       Fill="{Binding}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                
+            </StackPanel>
+
+            <StackPanel Margin="10" Orientation="Horizontal">
+                <Label Content="Stroke color"></Label>
+                <ComboBox x:Name="cbStrokeColor" 
+  SelectedIndex="0" Width="100">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Rectangle Width="50" 
+           Height="20" 
+           Stroke="{Binding}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+
+            </StackPanel>
+
+            <StackPanel Margin="5,10" Orientation="Horizontal">
+
+
+                <Label  Width="100" Content="Stroke thickness"  />
+                <TextBox Name="tbStrokeThickness" Text="1" Width="50" Margin="50,0,0,0">
+
+                </TextBox>
+            </StackPanel>
+        </StackPanel>
+        
+        <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3"
+        HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <Canvas x:Name="DrawingArea" Grid.Column="2" PreviewMouseMove="ProcessDraw" MouseLeftButtonDown="StartDraw" MouseLeftButtonUp="EndDraw" MouseRightButtonDown="PolyProcessDraw" Background="White">
+            
+        </Canvas>
+    </Grid>
+</Window>
