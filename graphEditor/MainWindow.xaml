@@ -6,6 +6,33 @@
         xmlns:local="clr-namespace:graphiclaEditor"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="900">
+    <DockPanel>
+    <Menu DockPanel.Dock="Top">
+        <MenuItem Header="File">
+            <MenuItem Header="Open" Click="OpenDrawing"/>
+            <MenuItem Header="Save" Click="SaveDrawing"/>
+        </MenuItem>
+        <MenuItem Header="Plugins">
+            <MenuItem Header="Add" Click="AddPlugin"/>
+        </MenuItem>
+
+            <MenuItem Click="Undo">
+                <MenuItem.Header>
+                    <TextBlock FontSize="20" >
+                        🠔
+                    </TextBlock>
+                </MenuItem.Header>
+            </MenuItem>
+
+            <MenuItem Click="Redo">
+                <MenuItem.Header>
+                    <TextBlock FontSize="20" >
+            🠖
+                    </TextBlock>
+                </MenuItem.Header>
+            </MenuItem>
+        </Menu>
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0.3*" />
@@ -14,21 +41,21 @@
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0" Orientation="Vertical">
             <Button  Name="btnClear" Content="Clear" Click="ClearDrawArea" Margin="5,10"  />
-            
-            <Button Name="btnLine" Content="Line" Margin="5,10" Click="ChooseShape"/>
+            <StackPanel Name="spRectButtons" Orientation="Vertical">
+                
+            </StackPanel>
+            <StackPanel Name="spCircleButtons" Orientation="Vertical">
+
+            </StackPanel>
+            <StackPanel Name="spPolyButtons" Orientation="Vertical">
+
+            </StackPanel>
             <StackPanel Margin="5,10" Orientation="Horizontal">
-                
-                
-                <Button Name="btnRightPolygon" Width="100" Content="Right Polygon"  Click="ChooseShape"/>
-                <TextBox Name="tbVertCount" Width="50" Text="3" Margin="50,0,0,0">
+                <Label Content="Number of vertexes for right polygon"></Label>
+                <TextBox Name="tbVertCount" Width="40" Text="3" Margin="0,0,0,0">
                     
                 </TextBox>
             </StackPanel>
-            
-            <Button Name="btnElipse" Content="Elipse" Margin="5,10" Click="ChooseShape"/>
-            <Button Name="btnRectangle" Content="Rectangle" Margin="5,10" Click="ChooseShape"/>
-            <Button Name="btnPolyline" Content="Polyline" Margin="5,10" Click="ChooseShape"/>
-            <Button Name="btnPolygon" Content="Polygon" Margin="5,10" Click="ChooseShape"/>
 
             <StackPanel Margin="10" Orientation="Horizontal">
                 <Label Content="Fill color     "></Label>
@@ -78,4 +105,5 @@
             
         </Canvas>
     </Grid>
+    </DockPanel>
 </Window>
