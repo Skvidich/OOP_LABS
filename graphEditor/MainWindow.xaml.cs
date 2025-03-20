@@ -19,7 +19,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace graphiclaEditor;
 
 
-
+public enum BaseClass { bcRect, bcCircle, bcPoly };
 public partial class MainWindow : Window
 {
         
@@ -29,36 +29,26 @@ public partial class MainWindow : Window
     private List<ConstructorInfo>? CircleConstructors;
     private List<ConstructorInfo>? PolyConstructors;
 
-    enum BaseClass  {bcRect,bcCircle,bcPoly};
-    // Drawing settings
-    private int CountVert;
-    private Double StrokeThickness;
-    private Brush StrokeColorBrush = Brushes.Black;
-    private Brush FillColorBrush = Brushes.Black;
-
     // Drawing parameters
-    private System.Windows.Shapes.Shape previewElem;
-    private ConstructorInfo? сurrConstructor;
-    private BaseClass currBase = BaseClass.bcRect;
+    private Drawer drawer;
     private bool isDrawing = false;
-    private Point startPoint;
-    private List<Cords> CordList;
 
+    private Serialiser serialiser;
+    private PluginManager manager;
     public MainWindow()
     {
         
-        
-
         InitializeComponent();
 
-        this.InitColorComboBox(this.cbFillColor, brush => this.FillColorBrush = brush);
-        this.InitColorComboBox(this.cbStrokeColor, brush => this.StrokeColorBrush = brush);
+        drawer = new Drawer(DrawingArea);
+        serialiser = new Serialiser();
+
+        this.InitColorComboBox(this.cbFillColor, brush => drawer.FillColorBrush = brush);
+        this.InitColorComboBox(this.cbStrokeColor, brush => drawer.StrokeColorBrush = brush);
 
         this.RectConstructors = InitShapesClasses(typeof(RectBase), new Type[] { typeof(Cords), typeof(Cords) });
         this.PolyConstructors = InitShapesClasses(typeof(PolyBase), new Type[] { typeof(List<Cords> )});
-        this.CircleConstructors = InitShapesClasses(typeof(CircleBase), new Type[] { typeof(Cords), typeof(Cords),typeof(int) });
-
-        this.сurrConstructor = null;
+        this.CircleConstructors = InitShapesClasses(typeof(CircleBase), new Type[] { typeof(Cords), typeof(Cords), typeof(int) });
 
         this.ButtonsToConstructors = new Dictionary<string, ConstructorInfo>();
         this.AddButtons(this.spRectButtons, this.RectConstructors, BaseClass.bcRect);
@@ -77,7 +67,8 @@ public partial class MainWindow : Window
             Brushes.Blue,
             Brushes.Green,
             Brushes.Yellow,
-            Brushes.Purple
+            Brushes.Purple,
+            Brushes.White,
         };
 
         cb.SelectionChanged += (sender, e) =>
@@ -109,8 +100,6 @@ public partial class MainWindow : Window
         return constructors;
     }
 
-
-
     private void AddButtons(StackPanel stackPanel, List<ConstructorInfo>? constructors,BaseClass baseClass)
     {
         if (constructors == null) { return; }
@@ -139,113 +128,67 @@ public partial class MainWindow : Window
     {
         btn.Click += (sender, e) =>
         {
-            this.сurrConstructor = this.ButtonsToConstructors[btn.Name];
-            this.currBase = baseClass;
+            drawer.currConstructor = this.ButtonsToConstructors[btn.Name];
+            drawer.currBase = baseClass;
         };
     }
 
-    // Drawing
-    private void StartDraw(object sender, MouseButtonEventArgs e)
+    // Drawing handlers
+    private void StartDrawClick(object sender, MouseButtonEventArgs e)
     {
-        if (this.сurrConstructor== null) { return; }
-        if (!int.TryParse(tbVertCount.Text,out CountVert) || CountVert < 3 || CountVert > 10)
+        
+        if (!int.TryParse(tbVertCount.Text,out drawer.CountVert) || drawer.CountVert < 3 || drawer.CountVert > 10)
         {
             MessageBox.Show("Number of vertexes must be more than 3 and less than 10");
             return;
         }
 
-        if (!double.TryParse(tbStrokeThickness.Text, out StrokeThickness) || StrokeThickness < 1 || StrokeThickness > 10)
+        if (!double.TryParse(tbStrokeThickness.Text, out drawer.StrokeThickness) || drawer.StrokeThickness < 1 || drawer.StrokeThickness > 10)
         {
             MessageBox.Show("Stroke thickness must be more than 1 and less than 10");
             return;
         }
 
-        isDrawing = true;
-        startPoint = e.GetPosition(DrawingArea);
-
-        Cords c1 = new Cords(startPoint);
-
-        CordList = new List<Cords>();
-        CordList.Add(c1);
-        previewElem = CurrentDraw(c1, c1);
+        Cords c1 = new Cords(e.GetPosition(DrawingArea));
+        isDrawing = drawer.StartDraw(c1);
 
     }
 
-    private void EndDraw(object sender, MouseButtonEventArgs e)
+    private void EndDrawClick(object sender, MouseButtonEventArgs e)
     {
         if (isDrawing == false) { return; };
         isDrawing = false;
 
-        Cords c1 = new Cords(startPoint);
-        Cords c2 = new Cords(e.GetPosition(DrawingArea));
-
-        DrawingArea.Children.Remove(previewElem);
-        previewElem = CurrentDraw(c1, c2);
-
-       
-
+        Cords endPoint = new Cords(e.GetPosition(DrawingArea));
+        drawer.EndDraw(endPoint);
     }
 
-    private void ProcessDraw(object sender, MouseEventArgs e)
+    private void DrawMove(object sender, MouseEventArgs e)
     {
         if (!isDrawing  ) return;
        
-        Point currentPoint = e.GetPosition(DrawingArea);
-        Cords c1 = new Cords(startPoint);
-        Cords c2 = new Cords(e.GetPosition(DrawingArea));
-  
-        DrawingArea.Children.Remove(previewElem);
-        CordList.Add(c2);
-        previewElem = previewElem = CurrentDraw(c1, c2);
-        CordList.Remove(c2);
+        Cords currentPoint = new Cords(e.GetPosition(DrawingArea));
+        drawer.ProcessDraw(currentPoint);
 
     }
 
-    private void PolyProcessDraw(object sender, MouseButtonEventArgs e)
+    private void PolyDrawClick(object sender, MouseButtonEventArgs e)
     {
-        if (!isDrawing || currBase != BaseClass.bcPoly) return;
+        if (!isDrawing ) return;
 
-        Cords c = new Cords(e.GetPosition(DrawingArea));
-
-        CordList.Add(c);
-        ProcessDraw(sender, e);
+        Cords currPoint = new Cords(e.GetPosition(DrawingArea));
+        drawer.PolyProcessDraw(currPoint);
 
     }
 
-
-
-    private System.Windows.Shapes.Shape CurrentDraw(Cords c1, Cords c2)
+    private void ClearClick(object sender, RoutedEventArgs e)
     {
-        
-        
-        var pen = new Pen() { Thickness = StrokeThickness, Brush = StrokeColorBrush };
-        Shape shape ; 
-        switch (currBase)
-        {
-            case BaseClass.bcRect:
-                shape = (Shape)this.сurrConstructor.Invoke([c1,c2]);
-                break;
-            case BaseClass.bcCircle:
-                shape = (Shape)this.сurrConstructor.Invoke([c1, c2,CountVert]);
-                break;
-            case BaseClass.bcPoly:
-                shape = (Shape)this.сurrConstructor.Invoke([CordList]);
-                break;
-            default:
-                shape = (Shape)this.сurrConstructor.Invoke([c1, c2]);
-                break;
-        }
-        
-        return shape.Paint(DrawingArea, FillColorBrush, pen);
-    }
-
-    private void ClearDrawArea(object sender, RoutedEventArgs e)
-    {
-        DrawingArea.Children.Clear();
+        drawer.Clear();
 
     }
 
-    private void OpenDrawing(object sender, RoutedEventArgs e)
+    // Menu click handlers
+    private void OpenClick(object sender, RoutedEventArgs e)
     {
         var openFileDialog = new OpenFileDialog
         {
@@ -254,12 +197,14 @@ public partial class MainWindow : Window
 
         if (openFileDialog.ShowDialog() == true)
         {
-            MessageBox.Show("Opened");
+            serialiser.Deserialise(openFileDialog.FileName);
         }
+        
     }
 
-    private void SaveDrawing(object sender, RoutedEventArgs e)
+    private void SaveClick(object sender, RoutedEventArgs e)
     {
+
         var saveFileDialog = new SaveFileDialog
         {
             Title = "Save drawing"
@@ -267,12 +212,12 @@ public partial class MainWindow : Window
 
         if (saveFileDialog.ShowDialog() == true)
         {
-            MessageBox.Show("Saved");
+            serialiser.Serialise(null, saveFileDialog.FileName);
         }
+        
     }
 
-
-    private void AddPlugin(object sender, RoutedEventArgs e)
+     private void AddClick(object sender, RoutedEventArgs e)
     {
         var openFileDialog = new OpenFileDialog
         {
@@ -281,18 +226,18 @@ public partial class MainWindow : Window
 
         if (openFileDialog.ShowDialog() == true)
         {
-            MessageBox.Show("Plugin added");
+            manager.AddPlugin(openFileDialog.FileName);
         }
     }
 
-    private void Undo(object sender,RoutedEventArgs e)
+     private void UndoClick(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("Undo");
+        drawer.Undo();
     }
 
-    private void Redo(object sender, RoutedEventArgs e)
+    private void RedoClick(object sender, RoutedEventArgs e)
     {
-        MessageBox.Show("Undo");
+        drawer.Redo();
     }
 }
 

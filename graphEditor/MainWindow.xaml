@@ -9,14 +9,14 @@
     <DockPanel>
     <Menu DockPanel.Dock="Top">
         <MenuItem Header="File">
-            <MenuItem Header="Open" Click="OpenDrawing"/>
-            <MenuItem Header="Save" Click="SaveDrawing"/>
+            <MenuItem Header="Open" Click="OpenClick"/>
+            <MenuItem Header="Save" Click="SaveClick"/>
         </MenuItem>
         <MenuItem Header="Plugins">
-            <MenuItem Header="Add" Click="AddPlugin"/>
+            <MenuItem Header="Add" Click="AddClick"/>
         </MenuItem>
 
-            <MenuItem Click="Undo">
+            <MenuItem Click="UndoClick">
                 <MenuItem.Header>
                     <TextBlock FontSize="20" >
                         🠔
@@ -24,7 +24,7 @@
                 </MenuItem.Header>
             </MenuItem>
 
-            <MenuItem Click="Redo">
+            <MenuItem Click="RedoClick">
                 <MenuItem.Header>
                     <TextBlock FontSize="20" >
             🠖
@@ -40,7 +40,7 @@
             <ColumnDefinition Width="0.7*" />
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0" Orientation="Vertical">
-            <Button  Name="btnClear" Content="Clear" Click="ClearDrawArea" Margin="5,10"  />
+            <Button  Name="btnClear" Content="Clear" Width="100" Click="ClearClick" Margin="5,10"  />
             <StackPanel Name="spRectButtons" Orientation="Vertical">
                 
             </StackPanel>
@@ -101,7 +101,7 @@
         
         <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3"
         HorizontalAlignment="Center" VerticalAlignment="Stretch" />
-        <Canvas x:Name="DrawingArea" Grid.Column="2" PreviewMouseMove="ProcessDraw" MouseLeftButtonDown="StartDraw" MouseLeftButtonUp="EndDraw" MouseRightButtonDown="PolyProcessDraw" Background="White">
+        <Canvas x:Name="DrawingArea" Grid.Column="2" PreviewMouseMove="DrawMove" MouseLeftButtonDown="StartDrawClick" MouseLeftButtonUp="EndDrawClick" MouseRightButtonDown="PolyDrawClick" Background="White">
             
         </Canvas>
     </Grid>
