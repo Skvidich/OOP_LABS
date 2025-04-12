@@ -66,27 +66,35 @@ namespace graphiclaEditor
             ProcessDraw(currPoint);
 
        }
+        private object[] GetConstructorArgs(Cords c1, Cords c2)
+        {
+            var constructors = new Dictionary<BaseClass, Func<object[]>>
+    {
+        { BaseClass.bcRect,  () => new object[] { c1, c2 } },
+        { BaseClass.bcCircle, () => new object[] { c1, c2, CountVert } },
+        { BaseClass.bcPoly,   () => new object[] { CordList } }
+    };
+
+            if (!constructors.TryGetValue(currBase, out var getArgs))
+            {
+                throw new Exception("Unknown class");
+            }
+
+            return getArgs();
+        }
 
         private System.Windows.Shapes.Shape CurrentDraw(Cords c1, Cords c2)
         {
-
+            if (currConstructor == null)
+            {
+                throw new InvalidOperationException("Constructor is not set.");
+            }
 
             var pen = new Pen() { Thickness = StrokeThickness, Brush = StrokeColorBrush };
-            Shape shape;
-            switch (currBase)
-            {
-                case BaseClass.bcRect:
-                    shape = (Shape)this.currConstructor.Invoke([c1, c2]);
-                    break;
-                case BaseClass.bcCircle:
-                    shape = (Shape)this.currConstructor.Invoke([c1, c2, CountVert]);
-                    break;
-                case BaseClass.bcPoly:
-                    shape = (Shape)this.currConstructor.Invoke([CordList]);
-                    break;
-                default:
-                    throw new Exception("unknown class");
-            }
+
+            var args = GetConstructorArgs(c1, c2);
+
+            var shape = (Shape)currConstructor.Invoke(args);
 
             return shape.Paint(DrawingArea, FillColorBrush, pen);
         }
