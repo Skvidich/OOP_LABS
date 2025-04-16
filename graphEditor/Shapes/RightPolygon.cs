@@ -9,24 +9,20 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using graphiclaEditor.Shapes;
+using Newtonsoft.Json;
 
 namespace graphiclaEditor
 {
    
     class RightPolygon : CircleBase
     {
-        protected int VertCount;
+        [JsonProperty]
         protected Cords StartPoint;
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas)
-        {
-            return Paint(canvas, this.Fill, this.Stroke);
-        }
-
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        public override void Paint(Canvas canvas)
         {
             var polygon = new System.Windows.Shapes.Polygon();
 
-            EventFuncs.SetPaintSettings(polygon, newFill, newStroke);
+            EventFuncs.SetPaintSettings(polygon, this.style.Fill, this.style.StrokePen);
 
             EventFuncs.SetMouseUpEvent(polygon, canvas);
 
@@ -36,13 +32,19 @@ namespace graphiclaEditor
 
             for (int i = 0; i < VertCount; i++)
             {
-                double angle =startAngle+ 2 * Math.PI * i / VertCount - Math.PI / 2; 
+                double angle = startAngle + 2 * Math.PI * i / VertCount - Math.PI / 2;
                 double x = Center.x + Radius * Math.Cos(angle);
                 double y = Center.y + Radius * Math.Sin(angle);
                 polygon.Points.Add(new Point(x, y));
             }
             canvas.Children.Add(polygon);
-            return polygon;
+        }
+
+        public override void Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        {
+
+            this.style = new ShapeStyle(newFill, newStroke);
+            this.Paint(canvas);
 
         }
 

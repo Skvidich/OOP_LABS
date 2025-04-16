@@ -16,21 +16,16 @@ namespace graphiclaEditor
     class Polyline : PolyBase
     {
         
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas)
-        {
-            return Paint(canvas, this.Fill, this.Stroke);
-        }
-
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        public override void Paint(Canvas canvas)
         {
             var polyline = new System.Windows.Shapes.Polyline();
 
 
-            fill = new SolidColorBrush(new Color
+            var fill = new SolidColorBrush(new Color
             {
                 A = 0,
             });
-            EventFuncs.SetPaintSettings(polyline, fill, newStroke);
+            EventFuncs.SetPaintSettings(polyline, fill, this.style.StrokePen);
 
             EventFuncs.SetMouseDownEvent(polyline, canvas);
 
@@ -38,8 +33,14 @@ namespace graphiclaEditor
 
             polyline.Points = new PointCollection(points);
             canvas.Children.Add(polyline);
-            
-            return polyline;
+        }
+
+        public override void Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        {
+
+
+            this.style = new ShapeStyle(newFill, newStroke);
+            this.Paint(canvas);
 
         }
 

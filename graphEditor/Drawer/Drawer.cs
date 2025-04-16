@@ -1,40 +1,53 @@
 ﻿using graphiclaEditor.Shapes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace graphiclaEditor
 {
     public class Drawer
     {
-        public  Canvas DrawingArea;
-        public  ConstructorInfo? currConstructor;
-        public  BaseClass currBase;
+        private Canvas drawingArea;
+
+        private ConstructorInfo? currConstructor;
+        public ConstructorInfo? CurrConstructor { set => currConstructor = value; }
 
 
-        public  int CountVert;
-        public Double StrokeThickness;
-        public Brush StrokeColorBrush = Brushes.Black;
-        public Brush FillColorBrush = Brushes.Black;
+        private BaseClass currBase;
+        public BaseClass CurrBase { set => currBase = value; }
 
-        public   System.Windows.Shapes.Shape previewElem;
-        public  Cords startPoint;
-        public  List<Cords> CordList;
+
+
+
+        // Drawing parametrs
+        private int countVert;
+        public int CountVert { set => countVert = value; }
+
+        private Double strokeThickness;
+        public Double StrokeThickness { set => strokeThickness = value; }
+
+        private Brush strokeColorBrush = Brushes.Black;
+        public Brush StrokeColorBrush { get => strokeColorBrush; set => strokeColorBrush = value; }
+        private Brush fillColorBrush = Brushes.Black;
+        public Brush FillColorBrush { get => fillColorBrush; set => fillColorBrush = value; }
+
+        private Shape previewElem;
+        private Cords startPoint;
+        private List<Cords> cordList;
+
+
+        private List<Shape> shapeList;
+        public List<Shape> ShapeList { get => shapeList; set { shapeList = value; this.Redraw(); } }
+        private Stack<Shape> redoStack;
 
         public  bool StartDraw(Cords start)
         {
             if (currConstructor == null) { return false; }
 
             startPoint = start;
-            CordList = new List<Cords>();
-            CordList.Add(start);
+            cordList = new List<Cords>();
+            cordList.Add(start);
             previewElem = CurrentDraw(startPoint,startPoint);
 
             return true;
@@ -43,18 +56,23 @@ namespace graphiclaEditor
         public  void EndDraw(Cords endPoint)
         {
 
-            DrawingArea.Children.Remove(previewElem);
+            drawingArea.Children.RemoveAt(drawingArea.Children.Count - 1);
             previewElem = CurrentDraw(startPoint, endPoint);
+            shapeList.Add(previewElem);
+            if (redoStack.Count() != 0)
+            {
+                redoStack.Clear();
+            }
 
         }
 
         public void ProcessDraw(Cords currPoint)
         {
-
-            DrawingArea.Children.Remove(previewElem);
-            CordList.Add(currPoint);
-            previewElem = previewElem = CurrentDraw(startPoint, currPoint);
-            CordList.Remove(currPoint);
+            
+            drawingArea.Children.RemoveAt(drawingArea.Children.Count - 1);
+            cordList.Add(currPoint);
+            previewElem = CurrentDraw(startPoint, currPoint);
+            cordList.Remove(currPoint);
 
         }
 
@@ -62,7 +80,7 @@ namespace graphiclaEditor
         {
             if ( currBase != BaseClass.bcPoly) return;
 
-            CordList.Add(currPoint);
+            cordList.Add(currPoint);
             ProcessDraw(currPoint);
 
        }
@@ -71,8 +89,8 @@ namespace graphiclaEditor
             var constructors = new Dictionary<BaseClass, Func<object[]>>
     {
         { BaseClass.bcRect,  () => new object[] { c1, c2 } },
-        { BaseClass.bcCircle, () => new object[] { c1, c2, CountVert } },
-        { BaseClass.bcPoly,   () => new object[] { CordList } }
+        { BaseClass.bcCircle, () => new object[] { c1, c2, countVert } },
+        { BaseClass.bcPoly,   () => new object[] { cordList } }
     };
 
             if (!constructors.TryGetValue(currBase, out var getArgs))
@@ -83,42 +101,66 @@ namespace graphiclaEditor
             return getArgs();
         }
 
-        private System.Windows.Shapes.Shape CurrentDraw(Cords c1, Cords c2)
+        private Shape CurrentDraw(Cords c1, Cords c2)
         {
             if (currConstructor == null)
             {
                 throw new InvalidOperationException("Constructor is not set.");
             }
 
-            var pen = new Pen() { Thickness = StrokeThickness, Brush = StrokeColorBrush };
+            var pen = new Pen() { Thickness = strokeThickness, Brush = strokeColorBrush };
 
             var args = GetConstructorArgs(c1, c2);
 
             var shape = (Shape)currConstructor.Invoke(args);
 
-            return shape.Paint(DrawingArea, FillColorBrush, pen);
+            shape.Paint(drawingArea, fillColorBrush, pen);
+
+            return shape;
         }
         public void Clear()
         {
-            DrawingArea.Children.Clear();
+            drawingArea.Children.Clear();
         }
 
-        public Drawer(Canvas drawingArea)
+
+        public Drawer(Canvas Area)
         {
-            DrawingArea = drawingArea;
+            drawingArea = Area;
+            shapeList = new List<Shape>();
+            redoStack = new Stack<Shape>();
         }
 
         public bool Undo()
         {
-            MessageBox.Show("Undo");
+            if (shapeList.Count() == 0) return false;
+
+            var temp =  shapeList.Last();
+            shapeList.Remove(temp);
+            redoStack.Push(temp);
+            Redraw();
             return true;
         }
 
         public bool Redo()
         {
-            MessageBox.Show("Redo");
+            if (redoStack.Count() == 0) return false;
+            var temp = redoStack.Pop();
+            shapeList.Add(temp);
+            Redraw();
             return true;
         }
+
+        public void Redraw()
+        {
+            drawingArea.Children.Clear();
+            foreach(var shp in shapeList)
+            {
+                shp.Paint(drawingArea);
+            }
+        }
+
+
 
     }
 }

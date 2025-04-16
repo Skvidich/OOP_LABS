@@ -1,25 +1,21 @@
-﻿using graphiclaEditor.Shapes;
+﻿using graphicalEditor;
+using graphiclaEditor.Shapes;
 using Microsoft.Win32;
-using System.Numerics;
+
 using System.Reflection;
-using System.Text;
+
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
+
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using MessageBox = System.Windows.MessageBox;
 
 
 namespace graphiclaEditor;
 
 
-public enum BaseClass { bcRect, bcCircle, bcPoly };
+
 public partial class MainWindow : Window
 {
         
@@ -33,7 +29,7 @@ public partial class MainWindow : Window
     private Drawer drawer;
     private bool isDrawing = false;
 
-    private Serialiser serialiser;
+    private ShapeStorage serialiser;
     private PluginManager manager;
     public MainWindow()
     {
@@ -41,10 +37,9 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         drawer = new Drawer(DrawingArea);
-        serialiser = new Serialiser();
-
-        this.InitColorComboBox(this.cbFillColor, brush => drawer.FillColorBrush = brush);
-        this.InitColorComboBox(this.cbStrokeColor, brush => drawer.StrokeColorBrush = brush);
+        serialiser = new ShapeStorage();
+        manager = new PluginManager();
+        
 
         this.RectConstructors = InitShapesClasses(typeof(RectBase), new Type[] { typeof(Cords), typeof(Cords) });
         this.PolyConstructors = InitShapesClasses(typeof(PolyBase), new Type[] { typeof(List<Cords> )});
@@ -58,27 +53,22 @@ public partial class MainWindow : Window
     }
 
     // Initialization
-    private void InitColorComboBox(ComboBox cb, Action<SolidColorBrush> updateBrushAction)
+    private void ChooseFillColor(object sender, RoutedEventArgs e)
     {
-        cb.ItemsSource = new List<SolidColorBrush>
+        var dlg = new ColorPickerWindow(((SolidColorBrush)drawer.FillColorBrush).Color);
+        if (dlg.ShowDialog() == true)
         {
-            Brushes.Black,
-            Brushes.Red,
-            Brushes.Blue,
-            Brushes.Green,
-            Brushes.Yellow,
-            Brushes.Purple,
-            Brushes.White,
-        };
+            drawer.FillColorBrush = new SolidColorBrush(dlg.SelectedColor);
+        }
+    }
 
-        cb.SelectionChanged += (sender, e) =>
+    private void ChooStrokeColor(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ColorPickerWindow(((SolidColorBrush)drawer.StrokeColorBrush).Color);
+        if (dlg.ShowDialog() == true)
         {
-            if (cb.SelectedItem is SolidColorBrush selectedBrush)
-            {
-
-                updateBrushAction(selectedBrush);
-            }
-        };
+            drawer.StrokeColorBrush = new SolidColorBrush(dlg.SelectedColor);
+        }
     }
 
     private List<ConstructorInfo>? InitShapesClasses(Type baseClass, Type[] constrArgs)
@@ -95,7 +85,8 @@ public partial class MainWindow : Window
         foreach (Type type in subTypes)
         {
             var constr = type.GetConstructor(constrArgs);
-            constructors.Add(constr);
+            if (constr != null)
+                constructors.Add(constr);
         }
         return constructors;
     }
@@ -128,27 +119,34 @@ public partial class MainWindow : Window
     {
         btn.Click += (sender, e) =>
         {
-            drawer.currConstructor = this.ButtonsToConstructors[btn.Name];
-            drawer.currBase = baseClass;
+            if (this.ButtonsToConstructors.TryGetValue(btn.Name, out var constructor))
+            {
+                drawer.CurrConstructor = constructor;
+                drawer.CurrBase = baseClass;
+            }
         };
     }
 
     // Drawing handlers
     private void StartDrawClick(object sender, MouseButtonEventArgs e)
     {
+        int countVert;
         
-        if (!int.TryParse(tbVertCount.Text,out drawer.CountVert) || drawer.CountVert < 3 || drawer.CountVert > 10)
+        if (!int.TryParse(tbVertCount.Text,out countVert) || countVert < 3 || countVert > 10)
         {
+            
             MessageBox.Show("Number of vertexes must be more than 3 and less than 10");
             return;
         }
-
-        if (!double.TryParse(tbStrokeThickness.Text, out drawer.StrokeThickness) || drawer.StrokeThickness < 1 || drawer.StrokeThickness > 10)
+        drawer.CountVert = countVert;
+        double thickness;
+        if (!double.TryParse(tbStrokeThickness.Text, out thickness) || thickness < 1 || thickness > 10)
         {
+            
             MessageBox.Show("Stroke thickness must be more than 1 and less than 10");
             return;
         }
-
+        drawer.StrokeThickness = thickness;
         Cords c1 = new Cords(e.GetPosition(DrawingArea));
         isDrawing = drawer.StartDraw(c1);
 
@@ -197,7 +195,10 @@ public partial class MainWindow : Window
 
         if (openFileDialog.ShowDialog() == true)
         {
-            serialiser.Deserialise(openFileDialog.FileName);
+            var temp = serialiser.Deserialise(openFileDialog.FileName);
+            if (temp != null){
+                drawer.ShapeList = temp;
+            }
         }
         
     }
@@ -212,7 +213,7 @@ public partial class MainWindow : Window
 
         if (saveFileDialog.ShowDialog() == true)
         {
-            serialiser.Serialise(null, saveFileDialog.FileName);
+            serialiser.Serialise(drawer.ShapeList, saveFileDialog.FileName);
         }
         
     }
@@ -232,12 +233,20 @@ public partial class MainWindow : Window
 
      private void UndoClick(object sender, RoutedEventArgs e)
     {
-        drawer.Undo();
+        if (!drawer.Undo())
+        {
+            MessageBox.Show("Nothing to undo");
+        }
+        ;
     }
 
     private void RedoClick(object sender, RoutedEventArgs e)
     {
-        drawer.Redo();
+        if (!drawer.Redo())
+        {
+            MessageBox.Show("Nothing to redo");
+        }
+        ;
     }
 }
 

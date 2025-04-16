@@ -57,37 +57,9 @@
                 </TextBox>
             </StackPanel>
 
-            <StackPanel Margin="10" Orientation="Horizontal">
-                <Label Content="Fill color     "></Label>
-                <ComboBox x:Name="cbFillColor" 
-              SelectedIndex="0" Width="100">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <Rectangle Width="50" 
-                       Height="20" 
-                       Fill="{Binding}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                <Button x:Name="btnPickFillColor" Content="Choose fill color" Click="ChooseFillColor"/>
 
-                
-            </StackPanel>
-
-            <StackPanel Margin="10" Orientation="Horizontal">
-                <Label Content="Stroke color"></Label>
-                <ComboBox x:Name="cbStrokeColor" 
-  SelectedIndex="0" Width="100">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <Rectangle Width="50" 
-           Height="20" 
-           Stroke="{Binding}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-
-
-            </StackPanel>
+                <Button x:Name="btnPickStrokeColor" Content="Choose stroke color" Click="ChooStrokeColor"/>
 
             <StackPanel Margin="5,10" Orientation="Horizontal">
 

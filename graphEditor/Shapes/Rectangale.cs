@@ -16,26 +16,27 @@ namespace graphiclaEditor
     class Rectangale : RectBase
     {
 
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas)
-        {
-            return Paint(canvas,this.Fill, this.Stroke);
-        }
-
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas,Brush newFill, Pen newStroke)
+        public override void Paint(Canvas canvas)
         {
             var rect = new System.Windows.Shapes.Rectangle();
 
             rect.Width = Math.Abs(LeftTop.x - RightBot.x);
             rect.Height = Math.Abs(LeftTop.y - RightBot.y);
 
-            EventFuncs.SetPaintSettings(rect, newFill, newStroke);
+            EventFuncs.SetPaintSettings(rect, this.style.Fill, this.style.StrokePen);
 
             EventFuncs.SetMouseUpEvent(rect, canvas);
 
             canvas.Children.Add(rect);
             Canvas.SetLeft(rect, LeftTop.x);
             Canvas.SetTop(rect, LeftTop.y);
-            return rect;
+        }
+
+        public override void  Paint(Canvas canvas,Brush newFill, Pen newStroke)
+        {
+
+            this.style = new ShapeStyle(newFill, newStroke);
+            this.Paint(canvas);
 
         }
 

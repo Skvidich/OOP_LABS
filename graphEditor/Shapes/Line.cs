@@ -14,12 +14,7 @@ namespace graphiclaEditor
 {
     public class Line : RectBase
     {
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas)
-        {
-            return Paint(canvas, this.Fill, this.Stroke);
-        }
-
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        public override void Paint(Canvas canvas)
         {
             System.Windows.Shapes.Line line = new System.Windows.Shapes.Line();
 
@@ -29,12 +24,19 @@ namespace graphiclaEditor
             line.X2 = this.RightBot.x;
             line.Y2 = this.RightBot.y;
 
-            EventFuncs.SetPaintSettings(line, newFill, newStroke);
+            EventFuncs.SetPaintSettings(line, this.style.Fill, this.style.StrokePen);
 
             EventFuncs.SetMouseUpEvent(line, canvas);
 
             canvas.Children.Add(line);
-            return line;
+    
+
+        }
+
+        public override void Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        {
+            this.style = new ShapeStyle(newFill, newStroke);
+            this.Paint(canvas);
 
         }
 

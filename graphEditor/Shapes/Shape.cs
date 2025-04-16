@@ -1,4 +1,6 @@
-﻿using System;
+﻿using graphiclaEditor.Shapes;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,32 +14,10 @@ namespace graphiclaEditor
     
     public abstract class Shape
     {
-        protected Brush fill;
-        protected Pen stroke;
-
-        public Brush Fill{ 
-            get
-            {
-                return fill;
-            } set
-            {
-                fill = value;
-            }
-        }
-
-        public Pen Stroke
-        {
-            get
-            {
-                return stroke;
-            }
-            set
-            {
-                stroke = value;
-            }
-        }
-        abstract public System.Windows.Shapes.Shape Paint(Canvas canvas);
-        abstract public System.Windows.Shapes.Shape Paint(Canvas canvas,Brush newFill, Pen newStroke);
+        [JsonProperty]
+        protected ShapeStyle style;
+        abstract public void Paint(Canvas canvas);
+        abstract public void Paint(Canvas canvas,Brush newFill, Pen newStroke);
 
     }
 }

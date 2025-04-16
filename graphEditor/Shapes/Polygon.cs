@@ -15,17 +15,12 @@ namespace graphiclaEditor
     class Polygon : PolyBase
     {
 
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas)
-        {
-            return Paint(canvas, this.Fill, this.Stroke);
-        }
-
-        public override System.Windows.Shapes.Shape Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        public override void Paint(Canvas canvas)
         {
             var polygon = new System.Windows.Shapes.Polygon();
 
 
-            EventFuncs.SetPaintSettings(polygon, newFill, newStroke);
+            EventFuncs.SetPaintSettings(polygon, this.style.Fill, this.style.StrokePen);
 
             EventFuncs.SetMouseDownEvent(polygon, canvas);
 
@@ -33,8 +28,14 @@ namespace graphiclaEditor
 
             polygon.Points = new PointCollection(points);
             canvas.Children.Add(polygon);
+        }
 
-            return polygon;
+        public override void Paint(Canvas canvas, Brush newFill, Pen newStroke)
+        {
+
+
+            this.style = new ShapeStyle(newFill, newStroke);
+            this.Paint(canvas);
 
         }
 
