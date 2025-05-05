@@ -38,12 +38,19 @@ public partial class MainWindow : Window
 
         drawer = new Drawer(DrawingArea);
         serialiser = new ShapeStorage();
-        manager = new PluginManager();
         
+
 
         this.RectConstructors = InitShapesClasses(typeof(RectBase), new Type[] { typeof(Cords), typeof(Cords) });
         this.PolyConstructors = InitShapesClasses(typeof(PolyBase), new Type[] { typeof(List<Cords> )});
         this.CircleConstructors = InitShapesClasses(typeof(CircleBase), new Type[] { typeof(Cords), typeof(Cords), typeof(int) });
+
+        manager = new PluginManager(
+        ref RectConstructors,
+        ref CircleConstructors,
+        ref PolyConstructors,
+        RefreshButtons
+        );
 
         this.ButtonsToConstructors = new Dictionary<string, ConstructorInfo>();
         this.AddButtons(this.spRectButtons, this.RectConstructors, BaseClass.bcRect);
@@ -103,7 +110,7 @@ public partial class MainWindow : Window
                 btn.Height = ButtonSize;
                 btn.Width = ButtonSize*5;
                 btn.HorizontalAlignment = HorizontalAlignment.Center;
-                btn.Name = "btn" + constructor.DeclaringType.Name;
+                btn.Name = "btn" + constructor.DeclaringType.FullName.Replace(".", "_");
                 btn.Content = constructor.DeclaringType.Name;
 
                 this.ButtonsToConstructors.Add(btn.Name, constructor);
@@ -248,6 +255,20 @@ public partial class MainWindow : Window
         }
         ;
     }
+
+    private void RefreshButtons()
+    {
+        spRectButtons.Children.Clear();
+        spCircleButtons.Children.Clear();
+        spPolyButtons.Children.Clear();
+        ButtonsToConstructors.Clear();
+
+
+        AddButtons(spRectButtons, RectConstructors, BaseClass.bcRect);
+        AddButtons(spCircleButtons, CircleConstructors, BaseClass.bcCircle);
+        AddButtons(spPolyButtons, PolyConstructors, BaseClass.bcPoly);
+    }
+
 }
 
 
